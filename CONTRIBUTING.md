@@ -24,7 +24,7 @@ Each app ships two READMEs, `README.md` and `README.es.md`, with the same sectio
 | 2 | `🖼️ Screenshots` | `🖼️ Capturas` |
 | 3 | `<identity emoji> Why <App>?` | `<identity emoji> ¿Por qué <App>?` |
 | 4 | `✨ Key Features` | `✨ Funciones principales` |
-| 5 | `🚀 Installation` | `🚀 Instalación` |
+| 5 | `⬇️ Installation` | `⬇️ Instalación` |
 | 6 | `🧭 Using the App` | `🧭 Cómo usar la app` |
 | 7 | `🛠️ Tech Stack & Architecture` | `🛠️ Stack tecnológico y arquitectura` |
 | 8 | `⌨️ Keyboard Shortcuts` | `⌨️ Atajos de teclado` |
@@ -33,7 +33,7 @@ Each app ships two READMEs, `README.md` and `README.es.md`, with the same sectio
 | 11 | `❓ FAQ` | `❓ Preguntas frecuentes` |
 | 12 | `🔗 See also` | `🔗 Ver también` |
 
-A banner, the badges, a tagline and `📑 Table of Contents` come before section 1, and `---` separates every section. The `Why <App>?` emoji is the app's own identity emoji; choose section emoji that do not collide with it or with another heading.
+A banner, the badges, a tagline and `📑 Table of Contents` come before section 1. These 12 headings — plus `📑 Table of Contents` — are the **only** level-2 headings a README may have, in exactly this order. A blank line, `---` and another blank line separate one section from the next. The `Why <App>?` emoji is the app's own identity emoji; choose section emoji that do not collide with it or with another heading. The table of contents lists the 12 core sections only, in the same order, using anchors generated from the heading text.
 
 Three sections are easy to blur, so keep them distinct:
 
@@ -41,16 +41,25 @@ Three sections are easy to blur, so keep them distinct:
 - **Using the App** — a short onboarding bridge: what appears on launch, three everyday steps using the app's own UI vocabulary, one short paragraph of caveats, and a link to the wiki's `How-Do-You-Use` page (or its `-es` translation when one exists). Do not copy the full guide here.
 - **Tech Stack & Architecture** — internals for contributors: platform, frameworks, build commands and design. Not instructions for end users.
 
-### Extra sections
+### App-exclusive material
 
-A section outside the core is allowed only when it documents something genuinely exclusive to that app — for example CyberWall's `How It Works` (kernel-level filtering), CyberViewer's `Security` and `Updates`, CyberClock's `Themes & Customization`, or CyberGo's alpha-only notes. If the same text would make sense in another app's README, it belongs in the core or in the wiki instead.
+Content that only makes sense for one app is welcome, but it never becomes a new level-2 section. Write it as a `###` subsection inside the closest core section, with the same heading and text in both languages. The current mapping:
 
-Extras must be added to both READMEs, listed in both tables of contents, and placed near the related core section without breaking the core order. Do not rename a core section to match an extra. A few older READMEs still carry sections inherited from a different skeleton; treat the core above as the target and resolve that drift when the README is next revised, rather than copying the deviation into another app.
+| App | Subsection | Parent |
+|---|---|---|
+| CyberClock | `🎨 Themes & Customization` | `🛠️ Tech Stack & Architecture` |
+| CyberFiles | `🧪 Project status`, `🤝 Contributing`, `🙏 Acknowledgments` | `🛠️ Tech Stack & Architecture` |
+| CyberGo | `🧪 Alpha notes` (Introduction), `📥 Download`, `🛡️ Windows SmartScreen` (Installation), `🏗️ Architecture` (Tech Stack) | see parentheses |
+| CyberPaste, CyberSnap | `🤝 Contributing`, `🙏 Acknowledgments` | `🛠️ Tech Stack & Architecture` |
+| CyberViewer | `🔒 Security`, `🔄 Updates` | `🛠️ Tech Stack & Architecture` |
+| CyberWall | `🔍 How It Works` | `🛠️ Tech Stack & Architecture` |
+
+If a subsection would make sense in another app's README, it belongs in a core section or in the wiki instead. Do not rename a core section to match it, do not list `###` subsections in the table of contents, and do not insert stray `---` rules between subsections — those belong between level-2 sections only. Existing `###` headings inside `Installation` and `Key Features` are already exempt from the TOC rule.
 
 ### Keeping both READMEs in sync
 
 - Change `README.md` and `README.es.md` together, including their tables of contents and links. A Spanish wiki link points at the `-es` page only when that translation exists; otherwise say so in the link text.
-- Copy heading anchors from the rendered README: emoji with a variation selector keep it in the slug (`#️-screenshots`), so a guessed anchor will silently break.
+- Copy heading anchors from the rendered README: emoji with a variation selector keep it in the slug (`#️-screenshots`, `#️-installation`), so a guessed anchor will silently break. The `🚀` heading slugged to `#-installation`; `⬇️` changed that anchor to `#️-installation`.
 - Preserve each file's existing line endings; the suite mixes CRLF and LF files.
 - Verify the rendered README (GitHub's HTML API or the preview), not just the Markdown source.
 
