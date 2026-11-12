@@ -63,6 +63,16 @@ If a subsection would make sense in another app's README, it belongs in a core s
 - Preserve each file's existing line endings; the suite mixes CRLF and LF files.
 - Verify the rendered README (GitHub's HTML API or the preview), not just the Markdown source.
 
+## Local scratch and protected files
+
+Every repository keeps an `artifacts/` folder for private local scratch: screenshots, notes, reference images and one-off scripts. It is not build output and it is not disposable. Each repo excludes it in `.git/info/exclude` so it stays out of `git status`, but being excluded is not permission to remove it.
+
+- Never commit, push, move, empty, delete or "clean" `artifacts/`, and never include it in bulk staging (`git add .`, `git add -A`, `git commit -a`). Stage only the files a change actually needs.
+- A request to clean the project, free disk space, delete non-essential files or prepare a release does **not** authorize touching it.
+- If `artifacts/` shows up as modified, leave it untouched and do not revert it. If it is missing, do not recreate it or write new files into it unless explicitly requested.
+- The same protection applies to local agent files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.cursor/`, `.github/copilot-instructions.md`).
+- Only genuine build caches (`node_modules/`, `dist/`, `src-tauri/target/` and the like, and only where they actually exist) may be removed when cleanup is explicitly requested. Do not treat any other untracked or ignored path as junk.
+
 ## Pull requests
 
 - One logical change per pull request. Keep the diff reviewable.
@@ -70,7 +80,7 @@ If a subsection would make sense in another app's README, it belongs in a core s
 - Make the app's own build, lint or test command pass before you open the PR. That command is documented in the app's README; if it is missing or wrong, say so in the PR.
 - Update user-facing documentation (README, wiki) when behaviour changes.
 - Every user-facing string needs both English and Spanish.
-- Do not commit local agent files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`), build output or anything from a personal scratch folder.
+- Do not commit local agent files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`), build output or anything from a personal scratch folder. See [Local scratch and protected files](#local-scratch-and-protected-files).
 
 ## Commits
 
