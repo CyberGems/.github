@@ -14,6 +14,46 @@ This guide applies to every repository in this account. A repository that ships 
 
 Each app has its own repository. Its `README.md` explains how to build and run it locally, and its wiki holds the longer notes. There is no monorepo: pick the repository of the app you want to change.
 
+## README structure
+
+Each app ships two READMEs, `README.md` and `README.es.md`, with the same sections in the same order (the Spanish file uses the translated names below). A README is the shop window, not the manual: long explanations belong in the wiki.
+
+| # | English | Español |
+|---|---|---|
+| 1 | `👋 Introduction` | `👋 Introducción` |
+| 2 | `🖼️ Screenshots` | `🖼️ Capturas` |
+| 3 | `<identity emoji> Why <App>?` | `<identity emoji> ¿Por qué <App>?` |
+| 4 | `✨ Key Features` | `✨ Funciones principales` |
+| 5 | `🚀 Installation` | `🚀 Instalación` |
+| 6 | `🧭 Using the App` | `🧭 Cómo usar la app` |
+| 7 | `🛠️ Tech Stack & Architecture` | `🛠️ Stack tecnológico y arquitectura` |
+| 8 | `⌨️ Keyboard Shortcuts` | `⌨️ Atajos de teclado` |
+| 9 | `❤️ Donate` | `❤️ Donar` |
+| 10 | `📄 License` | `📄 Licencia` |
+| 11 | `❓ FAQ` | `❓ Preguntas frecuentes` |
+| 12 | `🔗 See also` | `🔗 Ver también` |
+
+A banner, the badges, a tagline and `📑 Table of Contents` come before section 1, and `---` separates every section. The `Why <App>?` emoji is the app's own identity emoji; choose section emoji that do not collide with it or with another heading.
+
+Three sections are easy to blur, so keep them distinct:
+
+- **Installation** — only what puts the app on the machine: downloads, installers, SmartScreen, portable builds and runtime requirements. No usage steps.
+- **Using the App** — a short onboarding bridge: what appears on launch, three everyday steps using the app's own UI vocabulary, one short paragraph of caveats, and a link to the wiki's `How-Do-You-Use` page (or its `-es` translation when one exists). Do not copy the full guide here.
+- **Tech Stack & Architecture** — internals for contributors: platform, frameworks, build commands and design. Not instructions for end users.
+
+### Extra sections
+
+A section outside the core is allowed only when it documents something genuinely exclusive to that app — for example CyberWall's `How It Works` (kernel-level filtering), CyberViewer's `Security` and `Updates`, CyberClock's `Themes & Customization`, or CyberGo's alpha-only notes. If the same text would make sense in another app's README, it belongs in the core or in the wiki instead.
+
+Extras must be added to both READMEs, listed in both tables of contents, and placed near the related core section without breaking the core order. Do not rename a core section to match an extra. A few older READMEs still carry sections inherited from a different skeleton; treat the core above as the target and resolve that drift when the README is next revised, rather than copying the deviation into another app.
+
+### Keeping both READMEs in sync
+
+- Change `README.md` and `README.es.md` together, including their tables of contents and links. A Spanish wiki link points at the `-es` page only when that translation exists; otherwise say so in the link text.
+- Copy heading anchors from the rendered README: emoji with a variation selector keep it in the slug (`#️-screenshots`), so a guessed anchor will silently break.
+- Preserve each file's existing line endings; the suite mixes CRLF and LF files.
+- Verify the rendered README (GitHub's HTML API or the preview), not just the Markdown source.
+
 ## Pull requests
 
 - One logical change per pull request. Keep the diff reviewable.
