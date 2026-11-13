@@ -1,0 +1,104 @@
+name: Bug report
+description: Something in a CyberGems app does not work as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App
+      description: Which app is affected? The name is in the window title and in the installer.
+      placeholder: CyberSnap
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: App version
+      description: Shown in the app's About window and in the release you downloaded.
+      placeholder: 1.21.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: windows_version
+    attributes:
+      label: Windows version
+      options:
+        - Windows 11
+        - Windows 10
+        - Windows Server
+        - Other (explain below)
+    validations:
+      required: true
+
+  - type: input
+    id: windows_build
+    attributes:
+      label: Windows build
+      description: Run `winver` and paste the build number it shows.
+      placeholder: "26100.2314"
+    validations:
+      required: true
+
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: The actual behaviour, in your own words.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Does it happen every time?
+      options:
+        - Every time
+        - Only sometimes
+        - Only once
+    validations:
+      required: true
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or recordings
+      description: Drag the files here. Redact anything personal.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error messages
+      description: Remove usernames, file paths and tokens before pasting.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Portable install or installer, multiple monitors, antivirus, a specific theme, recent changes.
+    validations:
+      required: false

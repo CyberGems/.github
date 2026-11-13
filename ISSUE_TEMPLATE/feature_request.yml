@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest an improvement or a new capability for a CyberGems app
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App
+      description: Which app should change? Name several if the idea spans more than one.
+      placeholder: CyberTray
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve
+      description: Describe the situation you are in, not only the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Including how you work around it today.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: help
+    attributes:
+      label: Would you be willing to help?
+      options:
+        - Just suggesting the idea
+        - Open a pull request
+        - Test a build
+        - Translate new UI strings
+        - Write documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, links, examples from other tools. CyberGems apps stay offline, ad-free and account-free by design.
+    validations:
+      required: false
