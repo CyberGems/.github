@@ -20,10 +20,9 @@ Closes #
 
 ## Checklist
 
-- [ ] The app's build, lint or test command passes (see that repository's README)
-- [ ] User-facing documentation is updated when behaviour changed
+- [ ] User-facing documentation is updated when behaviour changed, with `README.md` and `README.es.md` kept in sync and their sections in the order described in `CONTRIBUTING.md`
 - [ ] Every new user-facing string exists in both English and Spanish
-- [ ] No `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, build output or personal scratch files are included
+- [ ] No `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.cursor/`, `.github/copilot-instructions.md`, `artifacts/`, build output or personal scratch files are included
 - [ ] Commits follow the conventions in `CONTRIBUTING.md`
 
 ## Screenshots or recordings
