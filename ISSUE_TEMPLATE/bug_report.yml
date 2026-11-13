@@ -29,9 +29,17 @@ body:
         - Windows 11
         - Windows 10
         - Windows Server
-        - Other (explain below)
+        - Other
     validations:
       required: true
+
+  - type: input
+    id: windows_other
+    attributes:
+      label: If you chose Other, which Windows version is it?
+      description: Leave this empty for Windows 10, 11 or Server.
+    validations:
+      required: false
 
   - type: input
     id: windows_build
