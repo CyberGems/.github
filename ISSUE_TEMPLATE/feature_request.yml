@@ -3,6 +3,12 @@ description: Suggest an improvement or a new capability for a CyberGems app
 title: "[Feature] "
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > Do not report security vulnerabilities here. Follow [SECURITY.md](https://github.com/CyberGems/.github/blob/main/SECURITY.md) and report them privately instead.
+
   - type: input
     id: app
     attributes:

@@ -3,6 +3,12 @@ description: Something in a CyberGems app does not work as expected
 title: "[Bug] "
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > Do not report security vulnerabilities here. Follow [SECURITY.md](https://github.com/CyberGems/.github/blob/main/SECURITY.md) and report them privately instead.
+
   - type: input
     id: app
     attributes:

@@ -1,0 +1,33 @@
+name: Validate issue forms
+
+# GitHub silently drops an issue form whose YAML is invalid or breaks the form
+# schema, so the template disappears from the issue chooser with no error
+# anywhere. This catches that on the push that introduces it.
+
+on:
+  push:
+    paths:
+      - 'ISSUE_TEMPLATE/**.yml'
+      - 'scripts/validate_issue_forms.py'
+      - '.github/workflows/validate-issue-forms.yml'
+  pull_request:
+    paths:
+      - 'ISSUE_TEMPLATE/**.yml'
+      - 'scripts/validate_issue_forms.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate ISSUE_TEMPLATE
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet --disable-pip-version-check pyyaml
+
+      - name: Check every form and the config
+        run: python3 scripts/validate_issue_forms.py
