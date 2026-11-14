@@ -7,12 +7,12 @@ name: Validate issue forms
 on:
   push:
     paths:
-      - 'ISSUE_TEMPLATE/**.yml'
+      - '.github/ISSUE_TEMPLATE/**.yml'
       - 'scripts/validate_issue_forms.py'
       - '.github/workflows/validate-issue-forms.yml'
   pull_request:
     paths:
-      - 'ISSUE_TEMPLATE/**.yml'
+      - '.github/ISSUE_TEMPLATE/**.yml'
       - 'scripts/validate_issue_forms.py'
   workflow_dispatch:
 

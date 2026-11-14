@@ -15,7 +15,10 @@ import sys
 
 import yaml
 
-TEMPLATE_DIR = pathlib.Path(__file__).resolve().parent.parent / "ISSUE_TEMPLATE"
+# In the .github repository, issue templates live under .github/ISSUE_TEMPLATE.
+# Templates at the repository root are ignored by GitHub, which is why this
+# path is asserted here instead of guessed.
+TEMPLATE_DIR = pathlib.Path(__file__).resolve().parent.parent / ".github" / "ISSUE_TEMPLATE"
 
 ALLOWED_TYPES = {"markdown", "input", "textarea", "dropdown", "checkboxes"}
 INPUT_TYPES = {"input", "textarea", "dropdown", "checkboxes"}
@@ -167,7 +170,7 @@ def main() -> int:
             print(f"checked {name}")
 
     if forms == 0:
-        errors.append("ISSUE_TEMPLATE has no issue forms")
+        errors.append(".github/ISSUE_TEMPLATE has no issue forms")
 
     if errors:
         print("\nValidation failed:", file=sys.stderr)
