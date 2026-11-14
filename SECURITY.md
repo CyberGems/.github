@@ -10,8 +10,8 @@ Please do **not** open a public issue, discussion or pull request for a security
 
 Use one of these private channels:
 
-1. **GitHub private vulnerability reporting**: open the affected repository, go to the **Security** tab and choose **Report a vulnerability**. This keeps the report, the discussion and the fix private until it is published.
-2. **Email**: `hello@cybergems.org`, if the Security tab is unavailable for that repository.
+1. **GitHub private vulnerability reporting**: open the affected repository, go to the **Security** tab and choose **Report a vulnerability**. This keeps the report, the discussion and the fix private until it is published. This channel only exists on public repositories; private ones do not show it, because GitHub requires a paid plan for it there.
+2. **Email**: `hello@cybergems.org`. This is the only channel for the private repositories (`CyberTrade` and `CyberFactory`), and the fallback whenever the Security tab or the **Report a vulnerability** button is missing.
 
 A useful report includes:
 
