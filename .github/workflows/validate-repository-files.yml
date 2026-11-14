@@ -1,19 +1,24 @@
-name: Validate issue forms
+name: Validate repository files
 
 # GitHub silently drops an issue form whose YAML is invalid or breaks the form
 # schema, so the template disappears from the issue chooser with no error
-# anywhere. This catches that on the push that introduces it.
+# anywhere. The READMEs are translated by hand, so their structure can drift
+# just as silently. Both are checked here on the push that breaks them.
 
 on:
   push:
     paths:
       - '.github/ISSUE_TEMPLATE/**.yml'
-      - 'scripts/validate_issue_forms.py'
-      - '.github/workflows/validate-issue-forms.yml'
+      - 'scripts/**.py'
+      - 'README.md'
+      - 'README.es.md'
+      - '.github/workflows/validate-repository-files.yml'
   pull_request:
     paths:
       - '.github/ISSUE_TEMPLATE/**.yml'
-      - 'scripts/validate_issue_forms.py'
+      - 'scripts/**.py'
+      - 'README.md'
+      - 'README.es.md'
   workflow_dispatch:
 
 permissions:
@@ -21,7 +26,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate ISSUE_TEMPLATE
+    name: Validate repository files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,5 +34,8 @@ jobs:
       - name: Install PyYAML
         run: python3 -m pip install --quiet --disable-pip-version-check pyyaml
 
-      - name: Check every form and the config
+      - name: Check every issue form and the chooser config
         run: python3 scripts/validate_issue_forms.py
+
+      - name: Check that README.md and README.es.md stay in sync
+        run: python3 scripts/check_readmes.py
