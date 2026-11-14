@@ -3,6 +3,3 @@ contact_links:
   - name: CyberGems website
     url: https://cybergems.org
     about: App pages, downloads and documentation.
-  - name: Contribution guide
-    url: https://github.com/CyberGems/.github/blob/main/CONTRIBUTING.md
-    about: How to build, test and submit a pull request.
