@@ -1,0 +1,36 @@
+name: README sync (EN/ES)
+
+# Reusable workflow. An app repository calls it with:
+#
+#   jobs:
+#     readme-sync:
+#       uses: CyberGems/.github/.github/workflows/readme-sync.yml@main
+#
+# The checker lives in this repository so the rule is maintained in one place.
+# App READMEs use tables of translated prose, so only the table shape is
+# compared there (--tables=counts); heading structure, code blocks and the two
+# language links are compared strictly.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: README.md and README.es.md
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the calling repository
+        uses: actions/checkout@v4
+
+      - name: Check out the shared checker
+        uses: actions/checkout@v4
+        with:
+          repository: CyberGems/.github
+          path: .community
+          sparse-checkout: scripts
+
+      - name: Compare the English and Spanish READMEs
+        run: python3 .community/scripts/check_readmes.py "$GITHUB_WORKSPACE" --tables=counts
