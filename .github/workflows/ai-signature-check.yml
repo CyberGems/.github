@@ -1,0 +1,49 @@
+name: AI signature check
+
+# Reusable workflow. A repository calls it with:
+#
+#   jobs:
+#     ai-signature-check:
+#       uses: CyberGems/.github/.github/workflows/ai-signature-check.yml@main
+#
+# It inspects the commit messages in a pull request and fails when an AI tool
+# signature is present. Local commit-msg hooks provide the first layer.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the pull request head
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/head
+          fetch-depth: 0
+
+      - name: Reject AI tool signatures
+        shell: bash
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          if [ -z "$base" ] || [ -z "$head" ]; then
+            echo "::error::Pull request SHAs are unavailable"
+            exit 1
+          fi
+
+          git log --format='%B%x0a' "$base..$head" > /tmp/pr-commit-messages.txt
+          tools='codebuff|claude|copilot|chatgpt|openai|codex|cursor|gemini|workbuddy|aider|windsurf|cline|roo|continue'
+
+          if grep -Eiq "(generated with|committed with|made with|ai-generated).*(${tools})" /tmp/pr-commit-messages.txt ||
+             grep -Eiq "^[[:space:]]*(co-authored-by|signed-off-by)[[:space:]]*:.*(${tools})" /tmp/pr-commit-messages.txt; then
+            echo "::error::AI tool signature found in commit messages. Remove it before merging."
+            git log --format='%h %s' "$base..$head"
+            exit 1
+          fi
+
+          echo "No AI tool signatures found in $base..$head"
