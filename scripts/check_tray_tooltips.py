@@ -35,10 +35,13 @@ APPS: dict[str, dict] = {
     },
     "CyberFeeds": {
         "blocks": [
-            ("src/main/tray.ts", ["function buildTrayTooltip", "function clampTrayTooltip"]),
+            (
+                "src/main/tray-tooltip.ts",
+                ["function clampTrayTooltip", "function formatTrayTooltip"],
+            ),
         ],
         "tooltip_calls": ("buildTrayTooltip", ["src/main/tray.ts"]),
-        "limit_constants": {"TRAY_TOOLTIP_MAX_LEN": "src/main/tray.ts"},
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LEN": "src/main/tray-tooltip.ts"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberFiles": {
@@ -49,32 +52,38 @@ APPS: dict[str, dict] = {
     },
     "CyberGo": {
         "blocks": [
-            ("electron/main.ts", ["function formatTrayTooltip"]),
+            ("electron/tray-tooltip.ts", ["function formatTrayTooltip"]),
         ],
         "tooltip_calls": ("formatTrayTooltip", ["electron/main.ts"]),
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LENGTH": "electron/tray-tooltip.ts"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberLauncher": {
         "blocks": [
-            ("electron/main.ts", ["function formatTrayTooltip"]),
+            ("electron/tray-tooltip.ts", ["function formatTrayTooltip"]),
         ],
         "tooltip_calls": ("formatTrayTooltip", ["electron/main.ts"]),
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LENGTH": "electron/tray-tooltip.ts"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberManager": {
         "blocks": [
             (
-                "src/CyberManager.UI/Services/TrayIconService.cs",
-                ["private string BuildTooltip"],
+                "src/CyberManager.UI/Services/TrayTooltipFormatter.cs",
+                ["static string Format(string? segment)"],
             ),
         ],
+        "limit_constants": {
+            "MaxLength": "src/CyberManager.UI/Services/TrayTooltipFormatter.cs"
+        },
         "forbid": ["GetCurrentVersionLabel", "127"],
     },
     "CyberNotes": {
         "blocks": [
-            ("electron/main.ts", ["function formatTrayTooltip"]),
+            ("electron/tray-tooltip.ts", ["function formatTrayTooltip"]),
         ],
         "tooltip_calls": ("formatTrayTooltip", ["electron/main.ts"]),
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LENGTH": "electron/tray-tooltip.ts"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberPaste": {
@@ -85,32 +94,38 @@ APPS: dict[str, dict] = {
     },
     "CyberSnap": {
         "blocks": [
-            ("src/CyberSnap/UI/TrayIcon.cs", ["private string FormatTrayTooltip"]),
+            (
+                "src/CyberSnap.AppModel/TrayTooltipText.cs",
+                ["static string Format(string? segment)"],
+            ),
         ],
+        "limit_constants": {"MaxLength": "src/CyberSnap.AppModel/TrayTooltipText.cs"},
         "forbid": ["GetCurrentVersionLabel"],
     },
     "CyberTray": {
         "blocks": [
-            ("electron/main.ts", ["function formatTrayTooltip"]),
+            ("electron/tray-tooltip.ts", ["function formatTrayTooltip"]),
         ],
         "tooltip_calls": ("formatTrayTooltip", ["electron/main.ts"]),
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LENGTH": "electron/tray-tooltip.ts"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberViewer": {
         "blocks": [
-            ("main.js", ["function formatTrayTooltip"]),
+            ("lib/tray-tooltip.js", ["function formatTrayTooltip"]),
         ],
         "tooltip_calls": ("formatTrayTooltip", ["main.js"]),
+        "limit_constants": {"TRAY_TOOLTIP_MAX_LENGTH": "lib/tray-tooltip.js"},
         "forbid": ["getVersion", "GetCurrentVersionLabel"],
     },
     "CyberWall": {
         "blocks": [
             (
-                "src/CyberWall.UI/Services/TrayService.cs",
-                ["private static string SafeTrayText"],
+                "src/CyberWall.Common/TrayTooltipText.cs",
+                ["static string Format(string? segment)"],
             ),
         ],
-        "strings": [("src/CyberWall.Common/I18n/Strings.cs", '"TrayTooltip')],
+        "limit_constants": {"MaxLength": "src/CyberWall.Common/TrayTooltipText.cs"},
         "forbid": ["GetCurrentVersionLabel"],
     },
 }
