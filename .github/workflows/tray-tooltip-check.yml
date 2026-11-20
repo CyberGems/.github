@@ -1,0 +1,21 @@
+name: Tray tooltip check
+
+on:
+  workflow_call:
+
+jobs:
+  tray-tooltip:
+    name: Tray tooltip format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+
+      - name: Checkout shared scripts
+        uses: actions/checkout@v4
+        with:
+          repository: CyberGems/.github
+          path: .suite-check
+
+      - name: Check tray tooltip format
+        run: python3 .suite-check/scripts/check_tray_tooltips.py .
