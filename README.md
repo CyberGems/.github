@@ -33,7 +33,7 @@ If a repository defines any of its own issue templates, GitHub ignores the whole
 
 ## AI disclosure template
 
-Unlike the community health files above, `AI-DISCLOSURE.md` and `AI-DISCLOSURE.es.md` are **not** applied automatically to other repositories. Copy both files into the root of each app repository and link them from the two READMEs.
+Unlike the community health files above, `AI-DISCLOSURE.md` and `AI-DISCLOSURE.es.md` are **not** applied automatically to other repositories. Copy both files into the root of each app repository and link them from the two READMEs. Replace `{{App}}` in both files with the app's own name, for example `CyberSnap`. Do not leave the placeholder in a published repository.
 
 Add one line under `## 📄 License` in `README.md` and under `## 📄 Licencia` in `README.es.md`. Do not add a new level-2 heading: app READMEs allow exactly 13 of them.
 
