@@ -19,6 +19,8 @@ GitHub trata un repositorio público llamado `.github` como la fuente por defect
 | `.github/ISSUE_TEMPLATE/config.yml` | Ajustes del selector de plantillas y enlaces de contacto |
 | `scripts/validate_issue_forms.py` | Comprueba los formularios contra las reglas de GitHub |
 | `.github/workflows/validate-issue-forms.yml` | Ejecuta esa comprobación en cada push y pull request |
+| `AI-DISCLOSURE.md` | Plantilla EN de la declaración de uso de IA |
+| `AI-DISCLOSURE.es.md` | Plantilla ES de la misma declaración |
 
 ## Dónde va cada archivo
 
@@ -28,6 +30,22 @@ La ubicación importa, y dos de ellas no son lo que la intuición sugiere:
 - Los formularios de issue **no**. Deben estar en **`.github/ISSUE_TEMPLATE/`** dentro de este repositorio. Las plantillas colocadas en la raíz se ignoran y nunca aparecen en el selector de issues, sin ningún error en ningún sitio.
 
 Si un repositorio define alguna de sus propias plantillas de issue, GitHub ignora la carpeta `ISSUE_TEMPLATE` por defecto para ese repositorio, así que las sobrescrituras son todo o nada.
+
+## Plantilla de declaración de IA
+
+A diferencia de los archivos de salud de comunidad anteriores, `AI-DISCLOSURE.md` y `AI-DISCLOSURE.es.md` **no** se aplican automáticamente a otros repositorios. Copia ambos archivos en la raíz de cada repositorio de app y enlázalos desde los dos README.
+
+Añade una línea bajo `## 📄 Licencia` en `README.es.md` y bajo `## 📄 License` en `README.md`. No añadas un encabezado de nivel 2: los README de las apps permiten exactamente 13.
+
+```markdown
+This project uses AI coding assistants. See [AI disclosure](AI-DISCLOSURE.md).
+```
+
+```markdown
+Este proyecto usa asistentes de programación con IA. Consulta la [declaración de uso de IA](AI-DISCLOSURE.es.md).
+```
+
+El texto maestro está bajo la licencia MIT, como el resto de este repositorio. Habla de «la licencia del repositorio» para seguir siendo exacto al copiarlo en un repositorio de app con licencia GPL.
 
 ## Cómo cambiar estos archivos
 
