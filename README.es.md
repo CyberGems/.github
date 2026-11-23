@@ -35,6 +35,8 @@ Si un repositorio define alguna de sus propias plantillas de issue, GitHub ignor
 
 A diferencia de los archivos de salud de comunidad anteriores, `AI-DISCLOSURE.md` y `AI-DISCLOSURE.es.md` **no** se aplican automáticamente a otros repositorios. Copia ambos archivos en la raíz de cada repositorio de app y enlázalos desde los dos README. Sustituye `{{App}}` en ambos archivos por el nombre de la app, por ejemplo `CyberSnap`. No dejes el marcador de posición en un repositorio publicado.
 
+`{{App}}` aparece dos veces: como sujeto del primer párrafo y en la frase que dice que la app no incluye funciones de IA propias. Esa frase es el valor por defecto. Si una app incluye funciones de IA, sustitúyela por una declaración breve de qué se ejecuta, cuándo y a dónde van los datos; `CyberPaste` es la redacción de referencia.
+
 Añade una línea bajo `## 📄 Licencia` en `README.es.md` y bajo `## 📄 License` en `README.md`. No añadas un encabezado de nivel 2: los README de las apps permiten exactamente 13.
 
 ```markdown
