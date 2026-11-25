@@ -1,0 +1,7 @@
+# Default funding links for CyberGems repositories.
+# A repository with its own .github/FUNDING.yml overrides these links.
+
+github: CyberGems
+ko_fi: cybergems
+buy_me_a_coffee: cybergems
+custom: "https://www.paypal.com/donate/?hosted_button_id=M4PY3UPJA5Y6Q"
