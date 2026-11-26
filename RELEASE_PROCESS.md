@@ -35,7 +35,7 @@ guard. It does not judge prose quality; it proves that the whole commit range
 was seen and that the draft is structurally ready.
 
 - Generate an audit before drafting:
-  `python scripts/check_release_notes.py inventory --repo ../<Repo> --from <previous-tag> --to HEAD --out ../_VARIOS/release-audits/<repo>-<tag>.json`
+  `python scripts/check_release_notes.py inventory --repo ../<Repo> --from <previous-tag> --to HEAD --out <local-scratch>/<repo>-<tag>.json`
 - Review the suggested `impact` values (`user`, `internal`, `noise`) and fill
   `coverage` with `H1`, `H2`, ... for every user-facing commit. Keep the audit
   in local scratch, never in a commit.
