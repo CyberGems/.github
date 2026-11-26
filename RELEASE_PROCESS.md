@@ -28,6 +28,29 @@ Rules:
   changed" report arrives, compare the marker or hash of the installed
   build against the release's checksums before debugging anything else.
 
+## Release note coverage check
+
+`scripts/check_release_notes.py` turns the coverage rule into a mechanical
+guard. It does not judge prose quality; it proves that the whole commit range
+was seen and that the draft is structurally ready.
+
+- Generate an audit before drafting:
+  `python scripts/check_release_notes.py inventory --repo ../<Repo> --from <previous-tag> --to HEAD --out ../_VARIOS/release-audits/<repo>-<tag>.json`
+- Review the suggested `impact` values (`user`, `internal`, `noise`) and fill
+  `coverage` with `H1`, `H2`, ... for every user-facing commit. Keep the audit
+  in local scratch, never in a commit.
+- Validate the draft:
+  `python scripts/check_release_notes.py check --repo ../<Repo> --from <previous-tag> --to HEAD --notes <draft>.md --audit <audit>.json --version <tag>`
+- A non-zero exit means the draft is not ready. The check verifies that the
+  audit matches the commit range, no template placeholders remain, both
+  summaries exist, the English summary is 25-45 words, highlight counts match
+  in English and Spanish, and no notes from the previous release were reused.
+  It also requires coverage for every user-facing commit, rejects highlights
+  with no supporting commit, and applies the review triggers: 15 or more
+  user-facing commits with fewer than 6 highlights, or 40 or more total
+  commits with fewer than 8. A patch with no user-facing changes may use a
+  maintenance-only note with no highlights.
+
 ## First-paint reveal guard
 
 Every Electron app of the suite creates its main window hidden and reveals
