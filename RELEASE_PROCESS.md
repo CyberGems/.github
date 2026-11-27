@@ -42,8 +42,9 @@ was seen and that the draft is structurally ready.
 - Validate the draft:
   `python scripts/check_release_notes.py check --repo ../<Repo> --from <previous-tag> --to HEAD --notes <draft>.md --audit <audit>.json --version <tag>`
 - A non-zero exit means the draft is not ready. The check verifies that the
-  audit matches the commit range, no template placeholders remain, both
-  summaries exist, the English summary is 25-45 words, highlight counts match
+  audit matches the commit range, no template placeholders or maintainer
+  HTML comments remain, both summaries exist, the English summary is 25-45
+  words, highlight counts match
   in English and Spanish, and no notes from the previous release were reused.
   It also requires coverage for every user-facing commit, rejects highlights
   with no supporting commit, and applies the review triggers: 15 or more

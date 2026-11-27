@@ -4,7 +4,7 @@
 The tool is mechanical on purpose. It cannot decide whether a highlight is well
 written, but it does prove that the whole commit range was seen, that every
 user-facing commit is covered by a highlight, that English and Spanish match,
-and that no template leftovers remain.
+and that no template placeholders or maintainer comments remain.
 
 Usage:
   python check_release_notes.py inventory --repo PATH --from TAG \
@@ -230,6 +230,11 @@ def check_draft(args: argparse.Namespace) -> int:
 
     placeholders = sorted(set(re.findall(r"\{\{[^}]+\}\}", notes)))
     require(not placeholders, f"unresolved template placeholders: {', '.join(placeholders)}")
+    comments = re.findall(r"<!--.*?-->", notes, re.S)
+    require(
+        not comments,
+        f"{len(comments)} maintainer HTML comment(s) left in the draft; release workflows strip them",
+    )
     require(bool(en_summary), "English summary not found")
     require(bool(es_summary), "Spanish summary not found")
     if en_summary:
