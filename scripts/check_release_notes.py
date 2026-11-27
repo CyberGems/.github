@@ -246,14 +246,24 @@ def check_draft(args: argparse.Namespace) -> int:
     require(len(en) == len(es), f"highlight parity mismatch: EN={len(en)} ES={len(es)}")
 
     template_path = repo / ".github" / "release-template.md"
-    if template_path.is_file():
-        template = load_text(template_path)
-        t_summary = normalize_for_stale(parse_summary(template))
-        if en_summary and t_summary and normalize_for_stale(en_summary) == t_summary:
-            failures.append("summary still matches the previous release template")
-        t_highlights = [normalize_for_stale(h) for h in parse_highlights(template, False)]
-        if en and t_highlights and [normalize_for_stale(h) for h in en] == t_highlights:
-            failures.append("highlights still match the previous release template")
+    if template_path.is_file() and audit_user_count:
+        try:
+            previous_template = run_git(repo, "show", f"{args.from_ref}:.github/release-template.md")
+        except RuntimeError:
+            previous_template = None
+        if previous_template is not None:
+            current_summary = normalize_for_stale(parse_summary(load_text(template_path)))
+            previous_summary = normalize_for_stale(parse_summary(previous_template))
+            current_highlights = [
+                normalize_for_stale(h) for h in parse_highlights(load_text(template_path), False)
+            ]
+            previous_highlights = [
+                normalize_for_stale(h) for h in parse_highlights(previous_template, False)
+            ]
+            if current_summary and current_summary == previous_summary:
+                failures.append("release template still holds the previous version's summary")
+            if current_highlights and current_highlights == previous_highlights:
+                failures.append("release template still holds the previous version's highlights")
 
     valid_ids = {f"H{i}" for i in range(1, len(en) + 1)}
     user_commits = [c for c in audit.get("commits", []) if c.get("impact") == "user"]
