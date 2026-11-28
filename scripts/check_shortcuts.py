@@ -54,6 +54,10 @@ JS_KEYSHORTCUTS = r"\bkeyshortcuts\s*[:=]\s*[\"']([^\"']+)[\"']"
 JS_WITH_SHORTCUT = r"withShortcut\([^,\n]*,\s*[\"']([^\"']+)[\"']"
 # A keycap rendered inline: <kbd className="...">Esc</kbd>.
 JS_KEYCAP = r"<kbd[^>]*>([^<]{1,20})</kbd>"
+# A chord written in tooltip text: `${t.search} (Alt+F)` or `(Shift+Enter)`.
+JS_PAREN_CHORD = (
+    r"\(((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9]+)\)"
+)
 DOTNET_WITH_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*\"([^\"]+)\""
 DOTNET_CONST_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*KeyboardShortcuts\.(\w+)"
 DOTNET_GESTURE = r"InputGestureText\s*=\s*\"([^\"]+)\""
@@ -434,6 +438,17 @@ def js_handler_chords(text: str) -> set[str]:
                 chord = make_chord(flags, raw)
                 if chord:
                     found.add(chord)
+            # A key check whose block branches on a modifier handles both:
+            #   if (e.key === 'Enter') { if (e.shiftKey) previous(); }
+            nested = {
+                modifier: value
+                for modifier, value in following_modifiers(lines, index).items()
+                if value
+            }
+            if nested:
+                chord = make_chord(nested, raw)
+                if chord:
+                    found.add(chord)
         case = CASE_KEY.search(line)
         if case and not KEY_COMPARE.search(line):
             # A switch over e.key inherits the modifiers around it, and a case
@@ -538,6 +553,7 @@ APPS: dict[str, dict] = {
         "handlers": [
             "src/renderer/src/App.tsx",
             "src/renderer/src/components/ArticleList.tsx",
+            "src/renderer/src/components/ArticleViewer.tsx",
             "src/renderer/src/components/TopBar.tsx",
             "src/shared/shortcuts.ts",
             "src/main/index.ts",
@@ -545,7 +561,14 @@ APPS: dict[str, dict] = {
         "announce": [
             (
                 "src/renderer/src/**/*.tsx",
-                [TOOLTIP_ATTR, JS_SHORTCUT, JS_WITH_SHORTCUT, JS_KEYCAP, ARIA_KEYS],
+                [
+                    TOOLTIP_ATTR,
+                    JS_SHORTCUT,
+                    JS_WITH_SHORTCUT,
+                    JS_KEYCAP,
+                    JS_PAREN_CHORD,
+                    ARIA_KEYS,
+                ],
             )
         ],
     },

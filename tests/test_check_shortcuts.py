@@ -147,6 +147,25 @@ class CheckShortcutsTest(unittest.TestCase):
         )
         self.assertEqual(chords, {"Ctrl+O", "Win+Down", "Win+Up"})
 
+    def test_parenthesized_tooltip_chord_is_announced(self) -> None:
+        text = (
+            '<Tooltip label={`${t.articleViewer.searchInArticle} (Alt+F)`} />\n'
+            '<Tooltip label={`${t.articleViewer.prevMatch} (Shift+Enter)`} />\n'
+        )
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_PAREN_CHORD], {})
+        self.assertEqual(chords, {"Alt+F", "Shift+Enter"})
+
+    def test_nested_modifier_branch_resolves_chord(self) -> None:
+        script = (
+            "if (e.key === 'Enter') {\n"
+            "  e.preventDefault()\n"
+            "  if (e.shiftKey) { previous() } else { next() }\n"
+            "}\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Enter", chords)
+        self.assertIn("Shift+Enter", chords)
+
     def test_plus_and_minus_keys_normalize(self) -> None:
         self.assertEqual(check_shortcuts.normalize("Ctrl++"), "Ctrl+Plus")
         self.assertEqual(check_shortcuts.normalize("Ctrl+Plus"), "Ctrl+Plus")
