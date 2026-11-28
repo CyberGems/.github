@@ -627,15 +627,21 @@ def is_test_file(path: Path) -> bool:
     return ".test." in name or ".spec." in name or "/tests/" in path.as_posix()
 
 
-def gather(repo: Path, patterns: list[str]) -> tuple[set[str], dict[str, str]]:
-    """Return announced chords and the constants referenced by announcements."""
+def is_glob(source: str) -> bool:
+    return any(character in source for character in "*?[")
+
+
+def gather(repo: Path, patterns: list[tuple[str, list[str]]]) -> tuple[set[str], dict[str, str], list[Path]]:
+    """Return announced chords, constants and the files that were examined."""
     chords: set[str] = set()
     constants: dict[str, str] = {}
-    for source, relative in patterns:
+    examined: set[Path] = set()
+    for source, _ in patterns:
         for path in sorted(repo.glob(source)):
             if not path.is_file() or is_test_file(path):
                 continue
             text = read(path)
+            examined.add(path)
             for name, value in re.findall(r"const\s+string\s+(\w+)\s*=\s*\"([^\"]+)\"", text):
                 constants[name] = value
     for source, regexes in patterns:
@@ -643,16 +649,18 @@ def gather(repo: Path, patterns: list[str]) -> tuple[set[str], dict[str, str]]:
             if not path.is_file() or is_test_file(path):
                 continue
             chords |= announcements(read(path), regexes, constants)
-    return chords, constants
+    return chords, constants, sorted(examined)
 
 
-def handler_chords(repo: Path, rules: dict) -> set[str]:
+def handler_chords(repo: Path, rules: dict) -> tuple[set[str], list[Path]]:
     found: set[str] = set()
+    examined: set[Path] = set()
     extractors = {"js": js_handler_chords, "cs": cs_handler_chords, "rust": rust_handler_chords}
 
     def add(kind: str, path: Path) -> None:
         if path.is_file() and not is_test_file(path):
             found.update(extractors[kind](read(path)))
+            examined.add(path)
 
     for relative in rules["handlers"]:
         path = repo / relative
@@ -664,28 +672,54 @@ def handler_chords(repo: Path, rules: dict) -> set[str]:
             add(rules["kind"], path)
     for kind, relative in rules.get("extra_handlers", []):
         add(kind, repo / relative)
-    return found
+    return found, sorted(examined)
 
 
-def check_repo(repo: Path) -> list[str]:
+def check_repo(repo: Path) -> tuple[list[str], str]:
     rules = APPS.get(repo.name)
     if rules is None:
         if any(repo.glob("*.sln")) or any(repo.glob("package.json")):
-            return [f"{repo.name}: no shortcut rules are registered for this app"]
-        return []
+            return [f"{repo.name}: no shortcut rules are registered for this app"], ""
+        return [], ""
 
-    announced, _ = gather(repo, rules["announce"])
+    announced, _, announce_files = gather(repo, rules["announce"])
+    examined_announcements = set(announce_files)
+    problems: list[str] = []
     for relative in rules.get("kbd_sheet", []):
         path = repo / relative
         if path.is_file():
             announced |= kbd_sheet_chords(read(path))
+            examined_announcements.add(path)
+        else:
+            problems.append(f"{repo.name}: shortcut sheet {relative} is gone")
 
-    handled = handler_chords(repo, rules) | set(rules.get("handled_extra", []))
+    handled, handler_files = handler_chords(repo, rules)
+    handled |= set(rules.get("handled_extra", []))
+
+    # A rule only guards the app while its sources still exist. A renamed
+    # directory or file would otherwise leave both sides empty and the check
+    # green without examining anything.
+    for source, _ in rules["announce"]:
+        if not is_glob(source) and not (repo / source).is_file():
+            problems.append(f"{repo.name}: announcement source {source} is gone")
+    for relative in [*rules["handlers"], *[path for _, path in rules.get("extra_handlers", [])]]:
+        if not (repo / relative).exists():
+            problems.append(f"{repo.name}: handler source {relative} is gone")
+    if not examined_announcements:
+        problems.append(f"{repo.name}: no announcement source matched; nothing was examined")
+    if not handler_files:
+        problems.append(f"{repo.name}: no handler source matched; nothing was examined")
+    if not handled:
+        problems.append(f"{repo.name}: no handler chord was resolved; the handler files hold no keyboard code")
+
     allowed = rules.get("allow", {})
-    problems = []
     for chord in sorted(announced - handled - PLATFORM_CHORDS - set(allowed)):
         problems.append(f"{repo.name}: announces {chord} but no handler resolves it")
-    return problems
+    summary = (
+        f"{len(examined_announcements)} announcement file(s), {len(handler_files)} handler file(s), "
+        f"{len(announced)} announced, {len(handled)} resolved"
+    )
+    return problems, summary
 
 
 def main(argv: list[str]) -> int:
@@ -693,13 +727,13 @@ def main(argv: list[str]) -> int:
     failures: list[str] = []
     for target in targets:
         repo = target.resolve()
-        problems = check_repo(repo)
+        problems, summary = check_repo(repo)
         if problems:
             failures.extend(problems)
             for problem in problems:
                 print(f"FAIL {problem}")
         else:
-            print(f"OK   {repo.name}: announced shortcuts have handlers")
+            print(f"OK   {repo.name}: announced shortcuts have handlers ({summary})")
     if failures:
         print(f"\n{len(failures)} shortcut problem(s) found.")
         return 1

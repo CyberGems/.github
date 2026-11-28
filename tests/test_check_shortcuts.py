@@ -35,6 +35,14 @@ class ViewerRepo:
             f"<!doctype html>\n<button {announcements}></button>\n",
         )
         write(self.path / "js" / "app.js", script)
+        # The app rules declare these too; the checker now fails when one is
+        # missing, so the fixture mirrors the real layout.
+        write(self.path / "js" / "workspace.js", "")
+        write(self.path / "js" / "video-player.js", "")
+        write(self.path / "main.js", "")
+
+    def check(self) -> tuple[list[str], str]:
+        return check_shortcuts.check_repo(self.path)
 
 
 class CheckShortcutsTest(unittest.TestCase):
@@ -46,41 +54,84 @@ class CheckShortcutsTest(unittest.TestCase):
         self._temporary.cleanup()
 
     def test_announced_chord_with_handler_passes(self) -> None:
-        ViewerRepo(
+        repo = ViewerRepo(
             self.root,
             'data-tooltip-kbd="Alt+O"',
             "document.addEventListener('keydown', (e) => {\n"
             "  if (e.altKey && !e.ctrlKey && e.key === 'o') openFolder();\n"
             "});\n",
         )
-        self.assertEqual(check_shortcuts.check_repo(self.root / "CyberViewer"), [])
+        problems, summary = repo.check()
+        self.assertEqual(problems, [])
+        self.assertIn("1 announcement file(s)", summary)
+        self.assertIn("4 handler file(s)", summary)
 
     def test_announced_chord_without_handler_fails(self) -> None:
-        ViewerRepo(
+        repo = ViewerRepo(
             self.root,
             'data-tooltip-kbd="Ctrl+Shift+F"',
             "document.addEventListener('keydown', (e) => {\n"
             "  if (e.altKey && e.key === 'o') openFolder();\n"
             "});\n",
         )
-        problems = check_shortcuts.check_repo(self.root / "CyberViewer")
+        problems, _ = repo.check()
         self.assertEqual(len(problems), 1)
         self.assertIn("Ctrl+Shift+F", problems[0])
         self.assertIn("no handler resolves it", problems[0])
 
     def test_platform_chords_are_exempt(self) -> None:
-        ViewerRepo(
+        repo = ViewerRepo(
             self.root,
             'data-tooltip-kbd="Alt+F4" data-keyshortcuts="Ctrl+Shift+T"',
-            "",
+            "if (e.altKey && e.key === 'o') openFolder();\n",
         )
-        self.assertEqual(check_shortcuts.check_repo(self.root / "CyberViewer"), [])
+        problems, _ = repo.check()
+        self.assertEqual(problems, [])
 
     def test_app_allowlist_is_exempt(self) -> None:
         repo = self.root / "CyberLauncher"
         write(repo / "package.json", "{}")
         write(repo / "src" / "App.tsx", "const item = { shortcut: 'Ctrl+A' };\n")
-        self.assertEqual(check_shortcuts.check_repo(repo), [])
+        write(repo / "src" / "CyberTerminal.tsx", "")
+        write(
+            repo / "electron" / "main.ts",
+            "if (e.altKey && e.key === 'p') pinPrompt();\n",
+        )
+        problems, _ = check_shortcuts.check_repo(repo)
+        self.assertEqual(problems, [])
+
+    def test_missing_announcement_source_fails(self) -> None:
+        repo = ViewerRepo(
+            self.root,
+            'data-tooltip-kbd="Alt+O"',
+            "if (e.altKey && e.key === 'o') openFolder();\n",
+        )
+        (repo.path / "CyberViewer.html").unlink()
+        problems, _ = repo.check()
+        self.assertTrue(any("announcement source CyberViewer.html is gone" in p for p in problems))
+        self.assertTrue(any("no announcement source matched" in p for p in problems))
+
+    def test_missing_handler_source_fails(self) -> None:
+        repo = ViewerRepo(
+            self.root,
+            'data-tooltip-kbd="Alt+O"',
+            "if (e.altKey && e.key === 'o') openFolder();\n",
+        )
+        for name in ("app.js", "workspace.js", "video-player.js"):
+            (repo.path / "js" / name).unlink()
+        (repo.path / "main.js").unlink()
+        problems, _ = repo.check()
+        self.assertTrue(any("handler source js/app.js is gone" in p for p in problems))
+        self.assertTrue(any("no handler source matched" in p for p in problems))
+
+    def test_handler_without_keyboard_code_fails(self) -> None:
+        repo = ViewerRepo(
+            self.root,
+            'data-tooltip-kbd="Alt+O"',
+            "// Refactored: the keyboard code was moved somewhere else.\n",
+        )
+        problems, _ = repo.check()
+        self.assertTrue(any("no handler chord was resolved" in p for p in problems))
 
 
 if __name__ == "__main__":
