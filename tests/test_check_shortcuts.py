@@ -190,6 +190,24 @@ class CheckShortcutsTest(unittest.TestCase):
     def test_space_key_normalizes(self) -> None:
         self.assertEqual(check_shortcuts.make_chord({"Ctrl": True}, " "), "Ctrl+Space")
 
+    def test_spanish_key_names_normalize(self) -> None:
+        self.assertEqual(check_shortcuts.normalize("Ctrl+Espacio"), "Ctrl+Space")
+        self.assertEqual(check_shortcuts.normalize("Ctrl+Supr"), "Ctrl+Delete")
+        self.assertEqual(check_shortcuts.normalize("Ctrl+Mayús+S"), "Ctrl+Shift+S")
+        self.assertEqual(check_shortcuts.normalize("Ctrl+RePág"), "Ctrl+PageUp")
+        self.assertEqual(check_shortcuts.normalize("Alt+Inicio"), "Alt+Home")
+
+    def test_global_shortcut_registration_is_a_handler(self) -> None:
+        script = (
+            "if (!globalShortcut.register('Alt+G', () => quickCapture())) return\n"
+            "const item = { label: 'Show', accelerator: 'Alt+Shift+R', global: true }\n"
+            "globalShortcut.register(shortcuts.showHide.accelerator, () => show())\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Alt+G", chords)
+        self.assertIn("Alt+Shift+R", chords)
+        self.assertEqual(len(chords), 2)
+
     def test_sibling_modifier_block_does_not_resolve_chord(self) -> None:
         script = (
             "if (e.key === 'Enter') {\n"

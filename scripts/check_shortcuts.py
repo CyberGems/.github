@@ -78,6 +78,8 @@ MODIFIERS = {
     "super": "Win",
     "alt": "Alt",
     "shift": "Shift",
+    "mayús": "Shift",
+    "mayus": "Shift",
     "⇧": "Shift",
 }
 
@@ -88,18 +90,29 @@ KEYS = {
     "escape": "Esc",
     "del": "Delete",
     "delete": "Delete",
+    "supr": "Delete",
     "space": "Space",
     "spacebar": "Space",
+    "espacio": "Space",
     "enter": "Enter",
     "return": "Enter",
+    "intro": "Enter",
     "tab": "Tab",
+    "tabulador": "Tab",
     "backspace": "Backspace",
+    "retroceso": "Backspace",
     "ins": "Insert",
     "insert": "Insert",
     "home": "Home",
+    "inicio": "Home",
     "end": "End",
+    "fin": "End",
     "pageup": "PageUp",
+    "repag": "PageUp",
+    "repág": "PageUp",
     "pagedown": "PageDown",
+    "avpag": "PageDown",
+    "avpág": "PageDown",
     "arrowleft": "Left",
     "arrowright": "Right",
     "arrowup": "Up",
@@ -253,6 +266,7 @@ CS_MODIFIER = re.compile(
 )
 CS_EVENT_MODIFIER = re.compile(r"\b(?:e|event|ev)\.(Control|Alt|Shift)\b")
 CS_MODIFIER_NAMES = {"control", "alt", "shift", "windows", "none"}
+GLOBAL_SHORTCUT = re.compile(r"globalShortcut\.register\(\s*['\"]([^'\"]+)['\"]")
 CHORD_LITERAL = re.compile(
     r"(?:Ctrl|Control|Alt|Shift|Win|Meta|Cmd|Super)"
     r"(?:\+(?:Ctrl|Control|Alt|Shift|Win|Meta|Cmd|Super))*\+[A-Za-z0-9?.,;'\[\]/`=\\-]+"
@@ -437,9 +451,23 @@ def js_handler_chords(text: str) -> set[str]:
             continue
         if re.search(r"\b(if|case|===|==|matchShortcut|accelerator|keyMatches|shortcutMatches)\b", line):
             for literal in CHORD_LITERAL.finditer(line):
-                chord = normalize(literal.group(0))
+                # The key charset includes the quote key and the punctuation
+                # that follows an object field, so trim the JS syntax first:
+                #   accelerator: 'Alt+Shift+R',  ->  Alt+Shift+R
+                value = literal.group(0).rstrip(",;")
+                opening = line[max(0, literal.start() - 1):literal.start()]
+                if opening in {"'", '"', "`"} and value.endswith(opening):
+                    value = value[:-1]
+                chord = normalize(value)
                 if chord:
                     found.add(chord)
+        # A menu item or a system-wide binding is a handler too, even when the
+        # line never compares a key: accelerator: 'Alt+Shift+R' and
+        # globalShortcut.register('Alt+G', …).
+        for match in GLOBAL_SHORTCUT.finditer(line):
+            chord = normalize(match.group(1))
+            if chord:
+                found.add(chord)
         for match in SHORT_VAR_COMPARE.finditer(line):
             if match.group(1) in {"key", "code", "Key", "tag"}:
                 continue
@@ -580,6 +608,8 @@ APPS: dict[str, dict] = {
             "src/renderer/src/components/TopBar.tsx",
             "src/shared/shortcuts.ts",
             "src/main/index.ts",
+            "src/main/ipc.ts",
+            "src/main/tray.ts",
         ],
         "announce": [
             (
