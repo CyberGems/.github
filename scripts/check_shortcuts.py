@@ -55,9 +55,7 @@ JS_WITH_SHORTCUT = r"withShortcut\([^,\n]*,\s*[\"']([^\"']+)[\"']"
 # A keycap rendered inline: <kbd className="...">Esc</kbd>.
 JS_KEYCAP = r"<kbd[^>]*>([^<]{1,20})</kbd>"
 # A chord written in tooltip text: `${t.search} (Alt+F)` or `(Shift+Enter)`.
-JS_PAREN_CHORD = (
-    r"\(((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9]+)\)"
-)
+JS_PAREN_CHORD = r"\(((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9]+)\)"
 DOTNET_WITH_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*\"([^\"]+)\""
 DOTNET_CONST_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*KeyboardShortcuts\.(\w+)"
 DOTNET_GESTURE = r"InputGestureText\s*=\s*\"([^\"]+)\""
@@ -351,14 +349,14 @@ def following_modifiers(lines: list[str], index: int) -> dict[str, bool]:
     return {}
 
 
-def nested_modifier_branches(
+def block_modifier_flags(
     lines: list[str], index: int, distance: int = 30
 ) -> list[dict[str, bool]]:
-    """Modifier checks made inside the block opened on lines[index].
+    """Positive modifiers used inside the block opened on lines[index].
 
-    A sibling check below a closed block (`if (e.key === 'Enter') { … }\n
-    if (e.shiftKey) { … }`) does not handle that chord, so the walk stops at
-    the brace that closes the key check.
+    Both forms make the chord modifier-specific: a branch (`if (e.shiftKey)`)
+    and an argument (`delete(…, e.shiftKey)`). The walk stops at the brace that
+    closes the key check, so a sibling check below it does not count.
     """
     depth = lines[index].count("{") - lines[index].count("}")
     if depth <= 0:
@@ -367,14 +365,10 @@ def nested_modifier_branches(
     for line in lines[index + 1:index + 1 + distance]:
         if depth <= 0:
             break
-        stripped = line.lstrip()
-        if (
-            not stripped.startswith("}")
-            and re.search(r"\bif\s*\(", line)
-            and not KEY_COMPARE.search(line)
-        ):
-            flags = modifier_flags(line)
-            if flags and any(flags.values()):
+        # Skip the `} else if` of a sibling branch and nested key comparisons.
+        if not line.lstrip().startswith("}") and not KEY_COMPARE.search(line):
+            flags = {name: value for name, value in modifier_flags(line).items() if value}
+            if flags:
                 branches.append(flags)
         depth += line.count("{") - line.count("}")
     return branches
@@ -435,7 +429,7 @@ def js_handler_chords(text: str) -> set[str]:
     # A one-letter alias such as `const k = event.key` would also rewrite the
     # 'k' inside a comparison or a keycap string, so leave it alone; longer
     # aliases (`keyLower`) are unambiguous.
-    for alias in (name for name in aliases if len(name) > 1):
+    for alias in {name for name in aliases if len(name) > 1}:
         text = re.sub(rf"\b{re.escape(alias)}\b", "key", text)
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -472,10 +466,10 @@ def js_handler_chords(text: str) -> set[str]:
                 chord = make_chord(flags, raw)
                 if chord:
                     found.add(chord)
-            # A key check whose block branches on a modifier handles both:
+            # A block that uses a modifier handles the chord with it too:
             #   if (e.key === 'Enter') { if (e.shiftKey) previous(); }
-            for nested in nested_modifier_branches(lines, index):
-                chord = make_chord(nested, raw)
+            for flags in block_modifier_flags(lines, index):
+                chord = make_chord(flags, raw)
                 if chord:
                     found.add(chord)
         case = CASE_KEY.search(line)
@@ -608,9 +602,6 @@ APPS: dict[str, dict] = {
         "announce": [
             ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
         ],
-        # The Delete branch receives e.shiftKey as an argument and opens the
-        # permanent-delete mode; there is no modifier `if` to read.
-        "allow": {"Shift+Delete": "Delete handler passes e.shiftKey"},
     },
     "CyberGo": {
         "kind": "js",

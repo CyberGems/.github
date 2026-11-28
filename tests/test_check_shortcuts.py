@@ -166,6 +166,16 @@ class CheckShortcutsTest(unittest.TestCase):
         self.assertIn("Enter", chords)
         self.assertIn("Shift+Enter", chords)
 
+    def test_modifier_argument_inside_block_resolves_chord(self) -> None:
+        script = (
+            "if (e.key === 'Delete') {\n"
+            "  removeSelection({ permanently: e.shiftKey })\n"
+            "}\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Delete", chords)
+        self.assertIn("Shift+Delete", chords)
+
     def test_short_alias_does_not_rewrite_key_literals(self) -> None:
         script = (
             "const k = event.key.toLowerCase()\n"
