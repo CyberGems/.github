@@ -294,6 +294,8 @@ def modifier_flags(fragment: str) -> dict[str, bool]:
 
 
 def make_chord(flags: dict[str, bool], key: str) -> str | None:
+    if key == " ":
+        key = "Space"
     if key.startswith("Key") and len(key) > 3:
         key = key[3:]
     elif key.startswith("Digit") and len(key) > 5:
@@ -349,6 +351,35 @@ def following_modifiers(lines: list[str], index: int) -> dict[str, bool]:
     return {}
 
 
+def nested_modifier_branches(
+    lines: list[str], index: int, distance: int = 30
+) -> list[dict[str, bool]]:
+    """Modifier checks made inside the block opened on lines[index].
+
+    A sibling check below a closed block (`if (e.key === 'Enter') { … }\n
+    if (e.shiftKey) { … }`) does not handle that chord, so the walk stops at
+    the brace that closes the key check.
+    """
+    depth = lines[index].count("{") - lines[index].count("}")
+    if depth <= 0:
+        return []
+    branches: list[dict[str, bool]] = []
+    for line in lines[index + 1:index + 1 + distance]:
+        if depth <= 0:
+            break
+        stripped = line.lstrip()
+        if (
+            not stripped.startswith("}")
+            and re.search(r"\bif\s*\(", line)
+            and not KEY_COMPARE.search(line)
+        ):
+            flags = modifier_flags(line)
+            if flags and any(flags.values()):
+                branches.append(flags)
+        depth += line.count("{") - line.count("}")
+    return branches
+
+
 def preceding_modifiers(lines: list[str], index: int) -> dict[str, bool]:
     """Modifiers of the if-condition that gates a key comparison."""
     merged: dict[str, bool] = {}
@@ -401,7 +432,10 @@ def js_handler_chords(text: str) -> set[str]:
     # A local named altKey/ctrlKey is a modifier capture (e.altKey), not a key
     # alias; folding it would erase the modifier from every comparison.
     aliases -= {"key", "code", "tag", "altKey", "ctrlKey", "shiftKey", "metaKey"}
-    for alias in aliases:
+    # A one-letter alias such as `const k = event.key` would also rewrite the
+    # 'k' inside a comparison or a keycap string, so leave it alone; longer
+    # aliases (`keyLower`) are unambiguous.
+    for alias in (name for name in aliases if len(name) > 1):
         text = re.sub(rf"\b{re.escape(alias)}\b", "key", text)
     lines = text.splitlines()
     for index, line in enumerate(lines):
@@ -440,12 +474,7 @@ def js_handler_chords(text: str) -> set[str]:
                     found.add(chord)
             # A key check whose block branches on a modifier handles both:
             #   if (e.key === 'Enter') { if (e.shiftKey) previous(); }
-            nested = {
-                modifier: value
-                for modifier, value in following_modifiers(lines, index).items()
-                if value
-            }
-            if nested:
+            for nested in nested_modifier_branches(lines, index):
                 chord = make_chord(nested, raw)
                 if chord:
                     found.add(chord)
@@ -544,8 +573,8 @@ APPS: dict[str, dict] = {
         "kind": "js",
         "handlers": ["src/main/app.js", "src/float/float.js", "src/float/cal.js", "src/tray/tray.js"],
         "announce": [
-            ("src/main/index.html", [TOOLTIP_ATTR]),
-            ("src/main/app.js", [JS_SHORTCUT]),
+            ("src/main/index.html", [TOOLTIP_ATTR, JS_PAREN_CHORD]),
+            ("src/main/app.js", [JS_SHORTCUT, JS_PAREN_CHORD]),
         ],
     },
     "CyberFeeds": {
@@ -576,17 +605,24 @@ APPS: dict[str, dict] = {
         "kind": "js",
         "handlers": ["src/App.tsx", "src/components"],
         "extra_handlers": [("rust", "src-tauri/src/main.rs")],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR])],
+        "announce": [
+            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+        ],
+        # The Delete branch receives e.shiftKey as an argument and opens the
+        # permanent-delete mode; there is no modifier `if` to read.
+        "allow": {"Shift+Delete": "Delete handler passes e.shiftKey"},
     },
     "CyberGo": {
         "kind": "js",
         "handlers": ["src/App.tsx", "src/components/TitleBar.tsx", "electron/main.ts"],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR])],
+        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR, JS_PAREN_CHORD])],
     },
     "CyberLauncher": {
         "kind": "js",
         "handlers": ["src/App.tsx", "src/CyberTerminal.tsx", "electron/main.ts"],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR])],
+        "announce": [
+            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+        ],
         # Text fields and the embedded terminal implement editing natively; the
         # context-menu rows name those native actions, not app bindings.
         "allow": {
@@ -619,7 +655,20 @@ APPS: dict[str, dict] = {
             "src/components/NoteList.tsx", "src/components/TitleBar.tsx",
             "src/App.tsx", "electron/main.ts",
         ],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR])],
+        "announce": [
+            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+        ],
+        # The editor engine owns these: TipTap binds Mod-b/i/u and Mod-z/y, and
+        # the clipboard chords are native inside the contenteditable.
+        "allow": {
+            "Ctrl+B": "TipTap bold binding",
+            "Ctrl+I": "TipTap italic binding",
+            "Ctrl+U": "TipTap underline binding",
+            "Ctrl+Z": "TipTap undo binding",
+            "Ctrl+Y": "TipTap redo binding",
+            "Ctrl+C": "native clipboard",
+            "Ctrl+V": "native clipboard",
+        },
     },
     "CyberPaste": {
         "kind": "js",
@@ -627,7 +676,12 @@ APPS: dict[str, dict] = {
             "frontend/src/App.tsx", "frontend/src/hooks",
             "frontend/src/components", "frontend/src/windows",
         ],
-        "announce": [("frontend/src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR])],
+        "announce": [
+            (
+                "frontend/src/**/*.tsx",
+                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD],
+            )
+        ],
         # Context-menu mnemonics are resolved at runtime from `keyHint`, so a
         # single letter has no literal comparison to find.
         "allow": {"T": "context-menu keyHint"},
@@ -660,13 +714,25 @@ APPS: dict[str, dict] = {
     "CyberTray": {
         "kind": "js",
         "handlers": ["src/App.tsx", "electron/main.ts"],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR, JS_WITH_SHORTCUT, JS_KEYCAP, ARIA_KEYS])],
+        "announce": [
+            (
+                "src/**/*.tsx",
+                [
+                    JS_SHORTCUT,
+                    TOOLTIP_ATTR,
+                    JS_WITH_SHORTCUT,
+                    JS_KEYCAP,
+                    JS_PAREN_CHORD,
+                    ARIA_KEYS,
+                ],
+            )
+        ],
     },
     "CyberViewer": {
         "kind": "js",
         "handlers": ["js/app.js", "js/workspace.js", "js/video-player.js", "main.js"],
         "announce": [
-            ("CyberViewer.html", [TOOLTIP_ATTR, MENU_SPAN, ARIA_KEYS]),
+            ("CyberViewer.html", [TOOLTIP_ATTR, MENU_SPAN, ARIA_KEYS, JS_PAREN_CHORD]),
         ],
         "kbd_sheet": ["CyberViewer.html"],
     },

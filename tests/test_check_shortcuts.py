@@ -166,6 +166,33 @@ class CheckShortcutsTest(unittest.TestCase):
         self.assertIn("Enter", chords)
         self.assertIn("Shift+Enter", chords)
 
+    def test_short_alias_does_not_rewrite_key_literals(self) -> None:
+        script = (
+            "const k = event.key.toLowerCase()\n"
+            "if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {\n"
+            "  setLink()\n"
+            "}\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Ctrl+K", chords)
+        self.assertNotIn("Ctrl+Key", chords)
+
+    def test_space_key_normalizes(self) -> None:
+        self.assertEqual(check_shortcuts.make_chord({"Ctrl": True}, " "), "Ctrl+Space")
+
+    def test_sibling_modifier_block_does_not_resolve_chord(self) -> None:
+        script = (
+            "if (e.key === 'Enter') {\n"
+            "  next()\n"
+            "}\n"
+            "if (e.shiftKey) {\n"
+            "  previous()\n"
+            "}\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Enter", chords)
+        self.assertNotIn("Shift+Enter", chords)
+
     def test_plus_and_minus_keys_normalize(self) -> None:
         self.assertEqual(check_shortcuts.normalize("Ctrl++"), "Ctrl+Plus")
         self.assertEqual(check_shortcuts.normalize("Ctrl+Plus"), "Ctrl+Plus")
