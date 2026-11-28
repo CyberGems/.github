@@ -1,0 +1,34 @@
+name: Shortcut check
+
+# Reusable workflow. An app repository calls it with:
+#
+#   jobs:
+#     shortcut-check:
+#       uses: CyberGems/.github/.github/workflows/shortcut-check.yml@main
+#
+# The checker lives in this repository so the per-app rules are maintained in
+# one place.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  shortcuts:
+    name: Announced shortcuts have handlers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the calling repository
+        uses: actions/checkout@v4
+
+      - name: Check out the shared checker
+        uses: actions/checkout@v4
+        with:
+          repository: CyberGems/.github
+          path: .suite-check
+          sparse-checkout: scripts
+
+      - name: Check announced shortcuts
+        run: python3 .suite-check/scripts/check_shortcuts.py .

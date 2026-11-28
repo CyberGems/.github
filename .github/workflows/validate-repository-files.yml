@@ -10,6 +10,7 @@ on:
     paths:
       - '.github/ISSUE_TEMPLATE/**.yml'
       - 'scripts/**.py'
+      - 'tests/**.py'
       - 'README.md'
       - 'README.es.md'
       - '.github/workflows/validate-repository-files.yml'
@@ -17,6 +18,7 @@ on:
     paths:
       - '.github/ISSUE_TEMPLATE/**.yml'
       - 'scripts/**.py'
+      - 'tests/**.py'
       - 'README.md'
       - 'README.es.md'
   workflow_dispatch:
@@ -33,6 +35,9 @@ jobs:
 
       - name: Install PyYAML
         run: python3 -m pip install --quiet --disable-pip-version-check pyyaml
+
+      - name: Run checker tests
+        run: python3 -m unittest discover -s tests -v
 
       - name: Check every issue form and the chooser config
         run: python3 scripts/validate_issue_forms.py
