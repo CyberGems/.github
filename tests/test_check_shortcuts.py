@@ -176,6 +176,24 @@ class CheckShortcutsTest(unittest.TestCase):
         self.assertIn("Delete", chords)
         self.assertIn("Shift+Delete", chords)
 
+    def test_short_title_and_aria_label_chords_are_announced(self) -> None:
+        text = (
+            '<button title="Ctrl+K" />\n'
+            '<button aria-label="  Alt+Shift+F12  " />\n'
+            '<button title="Ctrl+Shift+N" />\n'
+        )
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_SHORT_ATTR_CHORD], {})
+        self.assertEqual(chords, {"Ctrl+K", "Alt+Shift+F12", "Ctrl+Shift+N"})
+
+    def test_title_chord_outside_a_bare_value_is_ignored(self) -> None:
+        text = (
+            '<button title="Abrir imagen (Ctrl+O)" />\n'
+            '<button title="Ctrl+K Alt+F" />\n'
+            '<button aria-label="Ctrl+ThisKeyIsFarTooLong" />\n'
+        )
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_SHORT_ATTR_CHORD], {})
+        self.assertEqual(chords, set())
+
     def test_adjacent_keycaps_join_into_chord(self) -> None:
         text = (
             '<kbd>Ctrl</kbd>+<kbd>K</kbd>\n'

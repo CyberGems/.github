@@ -59,6 +59,13 @@ JSX_KEYCAP_RUN = re.compile(
     r"(?:<kbd[^>]*>[^<]{1,20}</kbd>\s*\+\s*)+<kbd[^>]*>[^<]{1,20}</kbd>",
     re.IGNORECASE,
 )
+# A title/aria-label whose whole value is one short chord: title="Ctrl+K".
+# Anchored to the closing quote so prose or several chords never qualify.
+JS_SHORT_ATTR_CHORD = (
+    r'(?:title|aria-label)="\s*'
+    r'((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9?]{1,10})'
+    r'\s*"'
+)
 # A chord written in tooltip text: `${t.search} (Alt+F)` or `(Shift+Enter)`.
 JS_PAREN_CHORD = r"\(((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9]+)\)"
 DOTNET_WITH_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*\"([^\"]+)\""
@@ -619,7 +626,7 @@ APPS: dict[str, dict] = {
         "kind": "js",
         "handlers": ["src/main/app.js", "src/float/float.js", "src/float/cal.js", "src/tray/tray.js"],
         "announce": [
-            ("src/main/index.html", [TOOLTIP_ATTR, JS_PAREN_CHORD]),
+            ("src/main/index.html", [TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD]),
             ("src/main/app.js", [JS_SHORTCUT, JS_PAREN_CHORD]),
         ],
     },
@@ -645,6 +652,7 @@ APPS: dict[str, dict] = {
                     JS_KEYCAP,
                     JS_PAREN_CHORD,
                     ARIA_KEYS,
+                    JS_SHORT_ATTR_CHORD,
                 ],
             )
         ],
@@ -654,19 +662,27 @@ APPS: dict[str, dict] = {
         "handlers": ["src/App.tsx", "src/components"],
         "extra_handlers": [("rust", "src-tauri/src/main.rs")],
         "announce": [
-            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+            (
+                "src/**/*.tsx",
+                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD],
+            )
         ],
     },
     "CyberGo": {
         "kind": "js",
         "handlers": ["src/App.tsx", "src/components/TitleBar.tsx", "electron/main.ts"],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR, JS_PAREN_CHORD])],
+        "announce": [
+            ("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD])
+        ],
     },
     "CyberLauncher": {
         "kind": "js",
         "handlers": ["src/App.tsx", "src/CyberTerminal.tsx", "electron/main.ts"],
         "announce": [
-            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+            (
+                "src/**/*.tsx",
+                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD],
+            )
         ],
         # Text fields and the embedded terminal implement editing natively; the
         # context-menu rows name those native actions, not app bindings.
@@ -701,7 +717,10 @@ APPS: dict[str, dict] = {
             "src/App.tsx", "electron/main.ts",
         ],
         "announce": [
-            ("src/**/*.tsx", [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD])
+            (
+                "src/**/*.tsx",
+                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD],
+            )
         ],
         # The editor engine owns these: TipTap binds Mod-b/i/u and Mod-z/y, and
         # the clipboard chords are native inside the contenteditable.
@@ -724,7 +743,7 @@ APPS: dict[str, dict] = {
         "announce": [
             (
                 "frontend/src/**/*.tsx",
-                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD],
+                [JS_SHORTCUT, JS_KEYSHORTCUTS, TOOLTIP_ATTR, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD],
             )
         ],
         # Context-menu mnemonics are resolved at runtime from `keyHint`, so a
@@ -769,6 +788,7 @@ APPS: dict[str, dict] = {
                     JS_KEYCAP,
                     JS_PAREN_CHORD,
                     ARIA_KEYS,
+                    JS_SHORT_ATTR_CHORD,
                 ],
             )
         ],
@@ -777,7 +797,7 @@ APPS: dict[str, dict] = {
         "kind": "js",
         "handlers": ["js/app.js", "js/workspace.js", "js/video-player.js", "main.js"],
         "announce": [
-            ("CyberViewer.html", [TOOLTIP_ATTR, MENU_SPAN, ARIA_KEYS, JS_PAREN_CHORD]),
+            ("CyberViewer.html", [TOOLTIP_ATTR, MENU_SPAN, ARIA_KEYS, JS_PAREN_CHORD, JS_SHORT_ATTR_CHORD]),
         ],
         "kbd_sheet": ["CyberViewer.html"],
     },
