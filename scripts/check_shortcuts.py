@@ -49,10 +49,20 @@ ARIA_KEYS = r'(?:aria-keyshortcuts|data-keyshortcuts)="([^"]+)"'
 MENU_SPAN = r'class="menu-shortcut"[^>]*>([^<]+)<'
 JS_SHORTCUT = r"\bshortcut\s*[:=]\s*[\"']([^\"']+)[\"']"
 JS_KEYSHORTCUTS = r"\bkeyshortcuts\s*[:=]\s*[\"']([^\"']+)[\"']"
+# A tooltip built as withShortcut(label, 'Ctrl+H'): the chord is an argument,
+# not a property, so JS_SHORTCUT never sees it.
+JS_WITH_SHORTCUT = r"withShortcut\([^,\n]*,\s*[\"']([^\"']+)[\"']"
+# A keycap rendered inline: <kbd className="...">Esc</kbd>.
+JS_KEYCAP = r"<kbd[^>]*>([^<]{1,20})</kbd>"
 DOTNET_WITH_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*\"([^\"]+)\""
 DOTNET_CONST_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*KeyboardShortcuts\.(\w+)"
 DOTNET_GESTURE = r"InputGestureText\s*=\s*\"([^\"]+)\""
 DOTNET_CONST_GESTURE = r"InputGestureText\s*=\s*KeyboardShortcuts\.(\w+)"
+# A themed tooltip attaches the chord as the third lambda:
+#   Attach(control, () => "Zoom in", () => "Ctrl++")
+# Both branches of a state ternary count (maximize announces Win+Up and Win+Down).
+DOTNET_ATTACH_SHORTCUT = r"Attach\([^;]*?,\s*\(\)\s*=>[^;]*?,\s*\(\)\s*=>[^;]*?\"([^\"]+)\""
+DOTNET_ATTACH_ALT = r"Attach\([^;]*?,\s*\(\)\s*=>[^;]*?,\s*\(\)\s*=>[^;]*?\?[^;]*?:\s*\"([^\"]+)\""
 XAML_GESTURE = r'InputGestureText="([^"]+)"'
 
 MODIFIERS = {
@@ -142,6 +152,10 @@ def normalize(chord: str) -> str | None:
         return None
     if re.fullmatch(r"\d+", chord):
         return None
+    # A plus key is written either as Ctrl++ or Ctrl+Plus; splitting on "+"
+    # would drop it, so name it before parsing.
+    if chord.endswith("++"):
+        chord = f"{chord[:-2]}+Plus"
     parts = [part.strip() for part in chord.split("+") if part.strip()]
     if not parts:
         return None
@@ -160,6 +174,9 @@ def normalize(chord: str) -> str | None:
         key = KEYS.get(lowered, part)
         if lowered in KEY_ALIASES:
             key = KEY_ALIASES[lowered]
+        # Punctuation is spelled one way everywhere, so the minus and plus keys
+        # compare equal whether they come from a tooltip or from Keys.Oemplus.
+        key = {"+": "Plus", "-": "Minus"}.get(key, key)
         # Single letters, digits, F-keys, navigation and a few punctuation keys
         # are keyboard keys. Words such as "Rueda" or "Arrastrar" are gestures.
         if not (
@@ -369,6 +386,19 @@ def case_context_flags(lines: list[str], index: int) -> dict[str, bool]:
 
 def js_handler_chords(text: str) -> set[str]:
     found: set[str] = set()
+    # `const keyLower = e.key.toLowerCase()` is the same comparison as `e.key`;
+    # fold the alias back so the patterns below can read it.
+    aliases = set(
+        re.findall(
+            r"\b(?:const|let|var)\s+(\w+)\s*=\s*(?:[\w.$]+\.)?(?:key|code)(?:\.toLowerCase\(\))?\b",
+            text,
+        )
+    )
+    # A local named altKey/ctrlKey is a modifier capture (e.altKey), not a key
+    # alias; folding it would erase the modifier from every comparison.
+    aliases -= {"key", "code", "tag", "altKey", "ctrlKey", "shiftKey", "metaKey"}
+    for alias in aliases:
+        text = re.sub(rf"\b{re.escape(alias)}\b", "key", text)
     lines = text.splitlines()
     for index, line in enumerate(lines):
         if ANNOUNCEMENT_LINE.search(line):
@@ -505,8 +535,19 @@ APPS: dict[str, dict] = {
     },
     "CyberFeeds": {
         "kind": "js",
-        "handlers": ["src/renderer/src/App.tsx", "src/shared/shortcuts.ts", "src/main/index.ts"],
-        "announce": [("src/renderer/src/**/*.tsx", [TOOLTIP_ATTR, JS_SHORTCUT])],
+        "handlers": [
+            "src/renderer/src/App.tsx",
+            "src/renderer/src/components/ArticleList.tsx",
+            "src/renderer/src/components/TopBar.tsx",
+            "src/shared/shortcuts.ts",
+            "src/main/index.ts",
+        ],
+        "announce": [
+            (
+                "src/renderer/src/**/*.tsx",
+                [TOOLTIP_ATTR, JS_SHORTCUT, JS_WITH_SHORTCUT, JS_KEYCAP, ARIA_KEYS],
+            )
+        ],
     },
     "CyberFiles": {
         "kind": "js",
@@ -572,7 +613,10 @@ APPS: dict[str, dict] = {
         "kind": "cs",
         "handlers": ["src/CyberPDF.UI/MainWindow.cs", "src/CyberPDF.UI/Controls/PageViewer.cs"],
         "announce": [
-            ("src/CyberPDF.UI/MainWindow.cs", [DOTNET_WITH_SHORTCUT, DOTNET_GESTURE]),
+            (
+                "src/CyberPDF.UI/MainWindow.cs",
+                [DOTNET_WITH_SHORTCUT, DOTNET_GESTURE, DOTNET_ATTACH_SHORTCUT, DOTNET_ATTACH_ALT],
+            ),
         ],
     },
     "CyberSnap": {
@@ -593,7 +637,7 @@ APPS: dict[str, dict] = {
     "CyberTray": {
         "kind": "js",
         "handlers": ["src/App.tsx", "electron/main.ts"],
-        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR])],
+        "announce": [("src/**/*.tsx", [JS_SHORTCUT, TOOLTIP_ATTR, JS_WITH_SHORTCUT, JS_KEYCAP, ARIA_KEYS])],
     },
     "CyberViewer": {
         "kind": "js",

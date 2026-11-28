@@ -124,6 +124,44 @@ class CheckShortcutsTest(unittest.TestCase):
         self.assertTrue(any("handler source js/app.js is gone" in p for p in problems))
         self.assertTrue(any("no handler source matched" in p for p in problems))
 
+    def test_with_shortcut_argument_is_announced(self) -> None:
+        text = '<Tooltip label={withShortcut(t.about, "F1")} />'
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_WITH_SHORTCUT], {})
+        self.assertEqual(chords, {"F1"})
+
+    def test_keycap_is_announced(self) -> None:
+        text = '<kbd className="welcome-kbd">J</kbd><kbd>Shift+Enter</kbd>'
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_KEYCAP], {})
+        self.assertEqual(chords, {"J", "Shift+Enter"})
+
+    def test_attach_lambda_announces_both_ternary_branches(self) -> None:
+        text = (
+            '_toolTip.Attach(_open, () => "Open", () => "Ctrl+O");\n'
+            '_toolTip.Attach(_max, () => "Restore",\n'
+            '    () => WindowState == FormWindowState.Maximized ? "Win+↓" : "Win+↑");\n'
+        )
+        chords = check_shortcuts.announcements(
+            text,
+            [check_shortcuts.DOTNET_ATTACH_SHORTCUT, check_shortcuts.DOTNET_ATTACH_ALT],
+            {},
+        )
+        self.assertEqual(chords, {"Ctrl+O", "Win+Down", "Win+Up"})
+
+    def test_plus_and_minus_keys_normalize(self) -> None:
+        self.assertEqual(check_shortcuts.normalize("Ctrl++"), "Ctrl+Plus")
+        self.assertEqual(check_shortcuts.normalize("Ctrl+Plus"), "Ctrl+Plus")
+        self.assertEqual(check_shortcuts.normalize("Ctrl+-"), "Ctrl+Minus")
+
+    def test_key_alias_is_resolved_without_losing_modifiers(self) -> None:
+        script = (
+            "const keyLower = e.key.toLowerCase();\n"
+            "if (e.altKey && keyLower === 'm') { toggleMenu(); }\n"
+            "if (keyLower === 'j') { next(); }\n"
+        )
+        chords = check_shortcuts.js_handler_chords(script)
+        self.assertIn("Alt+M", chords)
+        self.assertIn("J", chords)
+
     def test_handler_without_keyboard_code_fails(self) -> None:
         repo = ViewerRepo(
             self.root,
