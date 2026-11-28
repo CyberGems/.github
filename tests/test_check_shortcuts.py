@@ -176,6 +176,14 @@ class CheckShortcutsTest(unittest.TestCase):
         self.assertIn("Delete", chords)
         self.assertIn("Shift+Delete", chords)
 
+    def test_adjacent_keycaps_join_into_chord(self) -> None:
+        text = (
+            '<kbd>Ctrl</kbd>+<kbd>K</kbd>\n'
+            '<kbd className="k">Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd>\n'
+        )
+        chords = check_shortcuts.announcements(text, [check_shortcuts.JS_KEYCAP], {})
+        self.assertEqual(chords, {"Ctrl+K", "Ctrl+Shift+N"})
+
     def test_short_alias_does_not_rewrite_key_literals(self) -> None:
         script = (
             "const k = event.key.toLowerCase()\n"

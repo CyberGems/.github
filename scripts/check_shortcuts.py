@@ -54,6 +54,11 @@ JS_KEYSHORTCUTS = r"\bkeyshortcuts\s*[:=]\s*[\"']([^\"']+)[\"']"
 JS_WITH_SHORTCUT = r"withShortcut\([^,\n]*,\s*[\"']([^\"']+)[\"']"
 # A keycap rendered inline: <kbd className="...">Esc</kbd>.
 JS_KEYCAP = r"<kbd[^>]*>([^<]{1,20})</kbd>"
+# Keycaps joined into one chord: <kbd>Ctrl</kbd>+<kbd>K</kbd>.
+JSX_KEYCAP_RUN = re.compile(
+    r"(?:<kbd[^>]*>[^<]{1,20}</kbd>\s*\+\s*)+<kbd[^>]*>[^<]{1,20}</kbd>",
+    re.IGNORECASE,
+)
 # A chord written in tooltip text: `${t.search} (Alt+F)` or `(Shift+Enter)`.
 JS_PAREN_CHORD = r"\(((?:Ctrl|Alt|Shift|Win)(?:\+(?:Ctrl|Alt|Shift|Win))*\+[A-Za-z0-9]+)\)"
 DOTNET_WITH_SHORTCUT = r"WithShortcut(?:Hint)?\([^,]*,\s*\"([^\"]+)\""
@@ -221,8 +226,27 @@ def normalize(chord: str) -> str | None:
     return "+".join([*modifiers, key])
 
 
+def jsx_keycap_chords(text: str) -> set[str]:
+    """Chords spelled as separate keycaps joined by `+` on one line."""
+    found: set[str] = set()
+    for run in JSX_KEYCAP_RUN.finditer(text):
+        keys = [
+            re.sub(r"<[^>]+>", "", keycap).strip()
+            for keycap in re.findall(r"<kbd[^>]*>[^<]{1,20}</kbd>", run.group(0), re.IGNORECASE)
+        ]
+        chord = normalize("+".join(keys))
+        if chord:
+            found.add(chord)
+    return found
+
+
 def announcements(text: str, patterns: list[str], constants: dict[str, str]) -> set[str]:
     found: set[str] = set()
+    if JS_KEYCAP in patterns:
+        # A run is one chord; leave the individual keycaps out so the final
+        # letter does not also count as a shortcut on its own.
+        found |= jsx_keycap_chords(text)
+        text = JSX_KEYCAP_RUN.sub(" ", text)
     for pattern in patterns:
         for match in re.finditer(pattern, text):
             value = match.group(1)
